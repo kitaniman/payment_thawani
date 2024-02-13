@@ -43,8 +43,14 @@ class PaymentTransaction(models.Model):
                         "unit_amount": int(processing_values['amount']*1000)
                     }
                 ],
-                "success_url": url_join(base=base_url, url=ThawaniPayController._return_url),
-                "cancel_url": url_join(base=base_url, url=ThawaniPayController._return_url)
+                "success_url": url_join(
+                    base=base_url,
+                    url=ThawaniPayController._success_endpoint+'/'+processing_values['reference'].lower()
+                ),
+                "cancel_url": url_join(
+                    base=base_url,
+                    url=ThawaniPayController._cancel_endpoint+'/'+processing_values['reference'].lower()
+                )
             },
             method='POST'
         )
@@ -61,3 +67,32 @@ class PaymentTransaction(models.Model):
             'key': self.provider_id.thawani_publishable_key
         }
         return rendering_values
+
+    def _get_tx_from_notification_data(self, provider_code, notification_data):
+        """ Override of payment to find the transaction based on Thawani data.
+
+        :param str provider_code: The code of the provider that handled the transaction
+        :param dict notification_data: The notification data sent by the provider
+        :return: The transaction if found
+        :rtype: recordset of `payment.transaction`
+        :raise: ValidationError if inconsistent data were received
+        :raise: ValidationError if the data match no transaction
+        """
+        tx = super()._get_tx_from_notification_data(provider_code, notification_data)
+
+        if provider_code != 'thawani' or len(tx) == 1:
+            return tx
+
+        reference = notification_data.get('reference')
+
+        if reference:
+            tx = self.search([('reference', '=', reference), ('provider_code', '=', 'thawani')])
+        else:
+            raise ValidationError("Thawani: " + _("Received data with missing merchant reference"))
+
+        if not tx:
+            raise ValidationError(
+                "Thawani: " + _("No transaction found matching reference %s.", reference)
+            )
+
+        return tx
