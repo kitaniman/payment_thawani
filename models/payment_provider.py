@@ -118,7 +118,7 @@ class PaymentProvider(models.Model):
 
         except requests.exceptions.HTTPError:
             _logger.exception(
-                "Invalid API request at %s with data:\n%s", url, pprint.pformat(json),
+                "Invalid Thawani API request at %s with data:\n%s", url, pprint.pformat(json),
             )
             raise ValidationError("Thawani: " + _(
                 "Thawani gave us the following information: '%s'",

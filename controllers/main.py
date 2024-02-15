@@ -33,7 +33,7 @@ class ThawaniPayController(http.Controller):
             'thawani', dict(reference=data['reference'].upper())
         )
 
-        self._verify_payment_status(data, tx_sudo, 'paid')
+        self._verify_payment_status(data, tx_sudo, {'paid'})
 
         tx_sudo._set_done()
 
@@ -53,7 +53,7 @@ class ThawaniPayController(http.Controller):
             'thawani', dict(reference=data['reference'].upper())
         )
 
-        self._verify_payment_status(data, tx_sudo, 'cancelled')
+        self._verify_payment_status(data, tx_sudo, {'cancelled', 'unpaid'})
 
         tx_sudo._set_canceled()
         
@@ -106,13 +106,16 @@ class ThawaniPayController(http.Controller):
             raise Forbidden()
     
     @staticmethod
-    def _verify_payment_status(notification_data, tx_sudo, alleged_payment_status):
+    def _verify_payment_status(notification_data, tx_sudo, possible_payment_statuses: set):
         session_json = tx_sudo.provider_id._thawani_make_request(
             endpoint='checkout/reference/'+notification_data['reference'].lower(),
             method='GET'
         )
-        payment_status = session_json['payment_status']
+        _logger.info("Retrieved Thawani checkout session info:\n%s", pprint.pformat(session_json))
 
-        if alleged_payment_status != payment_status:
-            _logger.warn("The alleged payment status does not match the current payment status.")
-            raise Conflict("The alleged payment status does not match the current payment status.")
+        payment_status = session_json['data']['payment_status']
+
+        if payment_status not in possible_payment_statuses:
+            message = "The alleged payment statuses ("+str(possible_payment_statuses)+") do not contain the current payment status ("+str(payment_status)+")."
+            _logger.warning(message)
+            raise Conflict(message)
