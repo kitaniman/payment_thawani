@@ -31,18 +31,24 @@ class PaymentTransaction(models.Model):
 
         base_url = self.provider_id.get_base_url()
 
+        # Get all sale order lines that have an amount > 0 (since thawani does not accespt products with 0 value)
+        products = [
+            {
+                'name': sale_order_line.name,
+                'quantity': int(sale_order_line.product_uom_qty),
+                'unit_amount': int(sale_order_line.price_reduce_taxinc*1000)
+            }
+            for sale_order in self.sale_order_ids
+            for sale_order_line in self.env['sale.order.line'].search([('order_id', '=', sale_order.id)])
+            if int(sale_order_line.price_reduce_taxinc) > 0
+        ]
+
         session_json = self.provider_id._thawani_make_request(
             endpoint='checkout/session',
             json={
                 "client_reference_id": processing_values['reference'],
                 "mode": "payment",
-                "products": [
-                    {
-                        "name": "O50",
-                        "quantity": 1,
-                        "unit_amount": int(processing_values['amount']*1000)
-                    }
-                ],
+                "products": products,
                 "success_url": url_join(
                     base=base_url,
                     url=ThawaniPayController._success_endpoint+'/'+processing_values['reference'].lower()
