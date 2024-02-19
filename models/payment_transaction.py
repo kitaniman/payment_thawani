@@ -40,7 +40,7 @@ class PaymentTransaction(models.Model):
             }
             for sale_order in self.sale_order_ids
             for sale_order_line in self.env['sale.order.line'].search([('order_id', '=', sale_order.id)])
-            if int(sale_order_line.price_reduce_taxinc) > 0
+            if int(sale_order_line.price_reduce_taxinc*1000) > 0
         ]
 
         session_json = self.provider_id._thawani_make_request(
