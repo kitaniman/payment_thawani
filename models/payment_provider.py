@@ -4,7 +4,7 @@ import logging
 import pprint
 
 import requests
-from werkzeug.urls import url_join, url_parse
+from werkzeug.urls import url_join
 
 from odoo import _, fields, models
 from odoo.exceptions import ValidationError
@@ -34,13 +34,6 @@ class PaymentProvider(models.Model):
         required_if_provider='thawani',
         groups='base.group_system'
     )
-
-    # thawani_webhook_secret = fields.Char(
-    #     string="Webhook Signing Secret",
-    #     help="If a webhook is enabled on your Thawani account, this signing secret must be set to "
-    #          "authenticate the messages sent from Thawani to Odoo.",
-    #     groups='base.group_system'
-    # )
 
     # === BUSINESS METHODS ===#
     def _get_supported_currencies(self):

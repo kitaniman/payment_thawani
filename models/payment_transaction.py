@@ -4,10 +4,9 @@ import logging
 
 from werkzeug.urls import url_join
 
-from odoo import _, api, models
+from odoo import _, fields, models
 from odoo.exceptions import ValidationError
 
-from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment_thawani.controllers.main import ThawaniPayController
 
 
@@ -16,6 +15,11 @@ _logger = logging.getLogger(__name__)
 
 class PaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
+
+    thawani_checkout_session_id = fields.Char(
+        string="Thawani Checkout Session ID",
+        help="This field holds the Checkout Session ID related to this payment transaction."
+    )
 
     def _get_specific_rendering_values(self, processing_values):
         """ Override of `payment` to return Thawani-specific rendering values.
@@ -61,7 +65,11 @@ class PaymentTransaction(models.Model):
             method='POST'
         )
 
+        _logger.info('The result of craeting a new checkout session was the following:\n'+str(session_json))
+
         session_id = session_json['data']['session_id']
+
+        self.thawani_checkout_session_id = session_id
 
         payment_page_url = url_join(
             base=self.provider_id._thawani_get_payment_page_url(),

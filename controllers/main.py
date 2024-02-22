@@ -1,13 +1,11 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-import hmac
 import logging
 import pprint
 
-from werkzeug.exceptions import Forbidden, Conflict
+from werkzeug.exceptions import Conflict
 
 from odoo import http
-from odoo.exceptions import ValidationError
 from odoo.http import request
 
 
@@ -33,7 +31,7 @@ class ThawaniPayController(http.Controller):
             'thawani', dict(reference=data['reference'].upper())
         )
 
-        self._verify_payment_status(data, tx_sudo, {'paid'})
+        self._verify_payment_status(tx_sudo, {'paid'})
 
         tx_sudo._set_done()
 
@@ -53,7 +51,7 @@ class ThawaniPayController(http.Controller):
             'thawani', dict(reference=data['reference'].upper())
         )
 
-        self._verify_payment_status(data, tx_sudo, {'cancelled', 'unpaid'})
+        self._verify_payment_status(tx_sudo, {'cancelled', 'unpaid'})
 
         tx_sudo._set_canceled()
         
@@ -61,9 +59,9 @@ class ThawaniPayController(http.Controller):
 
     
     @staticmethod
-    def _verify_payment_status(notification_data, tx_sudo, possible_payment_statuses: set):
+    def _verify_payment_status(tx_sudo, possible_payment_statuses: set):
         session_json = tx_sudo.provider_id._thawani_make_request(
-            endpoint='checkout/reference/'+notification_data['reference'].lower(),
+            endpoint='checkout/session/'+tx_sudo.thawani_checkout_session_id,
             method='GET'
         )
         _logger.info("Retrieved Thawani checkout session info:\n%s", pprint.pformat(session_json))
