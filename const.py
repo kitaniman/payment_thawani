@@ -14,6 +14,5 @@ DEFAULT_PAYMENT_METHODS = [
     'card',
     # Brand payment methods.
     'visa',
-    'mastercard',
-    'amex'
+    'mastercard'
 ]
