@@ -8,7 +8,7 @@ from odoo import _, fields, models
 from odoo.exceptions import ValidationError
 
 from odoo.addons.payment_thawani.controllers.main import ThawaniPayController
-
+from odoo.addons.payment_thawani.utils import  prepare_product_name
 
 _logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class PaymentTransaction(models.Model):
         # Get all sale order lines that have an amount > 0 (since thawani does not accespt products with 0 value)
         products = [
             {
-                'name': sale_order_line.name,
+                'name': prepare_product_name(sale_order_line.name),
                 'quantity': int(sale_order_line.product_uom_qty),
                 'unit_amount': int(sale_order_line.price_reduce_taxinc*1000)
             }
