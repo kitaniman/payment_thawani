@@ -2,11 +2,12 @@
 
 {
     'name': "Payment Provider: Thawani",
+    'author': "Al-Kitani",
     'version': '1.0',
     'category': 'Accounting/Payment Providers',
     'sequence': 350,
     'summary': "A payment provider based in Oman covering most Omani payment methods.",
-    'description': " ",  # Non-empty string to avoid loading the README file.
+    'description': "An application that adds support for Thawani payment gateway to Odoo.",
     'depends': ['payment'],
     'data': [
         'views/payment_thawani_templates.xml',
