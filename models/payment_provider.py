@@ -112,8 +112,9 @@ class PaymentProvider(models.Model):
                 "Invalid Thawani API request at %s with data:\n%s", url, pprint.pformat(json),
             )
             raise ValidationError("Thawani: " + _(
-                "Thawani gave us the following information: '%s'",
-                pprint.pformat(response.json())
+                "Thawani API returned the following response: %s\n%s",
+                str(response),
+                "'"+str(response.text)+"'"
             ))
         
         except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):

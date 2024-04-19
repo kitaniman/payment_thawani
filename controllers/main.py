@@ -1,5 +1,6 @@
 import logging
 import pprint
+from urllib.parse import unquote
 
 from werkzeug.exceptions import Conflict
 
@@ -15,7 +16,7 @@ class ThawaniPayController(http.Controller):
     _cancel_endpoint = '/payment/thawani/cancel'
     _webhook_url = '/payment/thawani/webhook'
 
-    @http.route(_success_endpoint+'/<string:reference>', type='http', auth='public', methods=['GET'])
+    @http.route(_success_endpoint+'/<path:reference>', type='http', auth='public', methods=['GET'])
     def thawani_confirm_checkout(self, **data):
         """ Process the notification data sent by Thawani after redirection.
 
@@ -26,7 +27,7 @@ class ThawaniPayController(http.Controller):
         _logger.info("Received a payment confirmation request with data:\n%s", pprint.pformat(data))
         
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
-            'thawani', dict(reference=data['reference'].upper())
+            'thawani', dict(reference=unquote(data['reference']).upper())
         )
 
         self._verify_payment_status(tx_sudo, {'paid'})
@@ -35,7 +36,7 @@ class ThawaniPayController(http.Controller):
 
         return request.redirect('/payment/status')
 
-    @http.route(_cancel_endpoint+'/<string:reference>', type='http', auth='public', methods=['GET'])
+    @http.route(_cancel_endpoint+'/<path:reference>', type='http', auth='public', methods=['GET'])
     def thawani_cancel_checkout(self, **data):
         """ Process the notification data sent by Thawani after redirection.
 
@@ -46,7 +47,7 @@ class ThawaniPayController(http.Controller):
         _logger.info("Received a pay cancelation request with data:\n%s", pprint.pformat(data))
 
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
-            'thawani', dict(reference=data['reference'].upper())
+            'thawani', dict(reference=unquote(data['reference']).upper())
         )
 
         self._verify_payment_status(tx_sudo, {'cancelled', 'unpaid'})

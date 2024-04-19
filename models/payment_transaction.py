@@ -1,5 +1,6 @@
 import logging
 
+from urllib.parse import quote
 from werkzeug.urls import url_join
 
 from odoo import _, fields, models
@@ -45,6 +46,22 @@ class PaymentTransaction(models.Model):
             if int(sale_order_line.price_reduce_taxinc*1000) > 0
         ]
 
+        if not products:
+            total_amount = int(processing_values['amount']*1000)
+
+            if total_amount <= 0:
+                raise ValidationError("Cannot create a checkout session as total amount is <= 0")
+
+            products = [
+                {
+                    'name': 'Reference ID '+processing_values['reference'],
+                    'quantity': 1,
+                    'unit_amount': total_amount
+                }
+            ]
+
+        _logger.info('Products:\n'+str(products))
+
         session_json = self.provider_id._thawani_make_request(
             endpoint='checkout/session',
             json={
@@ -53,12 +70,13 @@ class PaymentTransaction(models.Model):
                 "products": products,
                 "success_url": url_join(
                     base=base_url,
-                    url=ThawaniPayController._success_endpoint+'/'+processing_values['reference'].lower()
+                    url=ThawaniPayController._success_endpoint+'/'+quote(processing_values['reference'].lower(), safe='')
                 ),
                 "cancel_url": url_join(
                     base=base_url,
-                    url=ThawaniPayController._cancel_endpoint+'/'+processing_values['reference'].lower()
-                )
+                    url=ThawaniPayController._cancel_endpoint+'/'+quote(processing_values['reference'].lower(), safe='')
+                ),
+                "metadata": {}
             },
             method='POST'
         )
