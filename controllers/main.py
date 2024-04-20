@@ -1,6 +1,5 @@
 import logging
 import pprint
-from urllib.parse import unquote
 
 from werkzeug.exceptions import Conflict
 
@@ -27,7 +26,7 @@ class ThawaniPayController(http.Controller):
         _logger.info("Received a payment confirmation request with data:\n%s", pprint.pformat(data))
         
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
-            'thawani', dict(reference=unquote(data['reference']).upper())
+            'thawani', dict(reference=data['reference'].upper())
         )
 
         self._verify_payment_status(tx_sudo, {'paid'})
@@ -47,7 +46,7 @@ class ThawaniPayController(http.Controller):
         _logger.info("Received a pay cancelation request with data:\n%s", pprint.pformat(data))
 
         tx_sudo = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
-            'thawani', dict(reference=unquote(data['reference']).upper())
+            'thawani', dict(reference=data['reference'].upper())
         )
 
         self._verify_payment_status(tx_sudo, {'cancelled', 'unpaid'})

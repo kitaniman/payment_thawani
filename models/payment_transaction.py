@@ -1,6 +1,5 @@
 import logging
 
-from urllib.parse import quote
 from werkzeug.urls import url_join
 
 from odoo import _, fields, models
@@ -70,11 +69,11 @@ class PaymentTransaction(models.Model):
                 "products": products,
                 "success_url": url_join(
                     base=base_url,
-                    url=ThawaniPayController._success_endpoint+'/'+quote(processing_values['reference'].lower(), safe='')
+                    url=ThawaniPayController._success_endpoint+'/'+processing_values['reference'].lower()
                 ),
                 "cancel_url": url_join(
                     base=base_url,
-                    url=ThawaniPayController._cancel_endpoint+'/'+quote(processing_values['reference'].lower(), safe='')
+                    url=ThawaniPayController._cancel_endpoint+'/'+processing_values['reference'].lower()
                 ),
                 "metadata": {}
             },
