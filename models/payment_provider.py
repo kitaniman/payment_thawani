@@ -4,7 +4,7 @@ import pprint
 import requests
 from werkzeug.urls import url_join
 
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 from odoo.addons.payment_thawani.const import SUPPORTED_CURRENCIES, PROVIDER_ADDRESSES, DEFAULT_PAYMENT_METHODS
@@ -125,3 +125,12 @@ class PaymentProvider(models.Model):
         
         return response.json()
 
+    #=== ONCHANGE METHODS ===#
+
+    @api.onchange('state')
+    def _onchange_state_switch_is_published(self):
+        """ Automatically publish or unpublish the provider depending on its state.
+
+        :return: None
+        """
+        self.is_published = self.state != 'disabled'
