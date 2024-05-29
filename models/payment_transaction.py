@@ -44,7 +44,16 @@ class PaymentTransaction(models.Model):
             for sale_order_line in self.env['sale.order.line'].search([('order_id', '=', sale_order.id)])
             if int(sale_order_line.price_reduce_taxinc*1000) > 0
         ]
-
+        discounts = [
+            {
+                'name': prepare_product_name(sale_order_line.name),
+                'quantity': int(sale_order_line.product_uom_qty),
+                'unit_amount': int(sale_order_line.price_reduce_taxinc*1000)
+            }
+            for sale_order in self.sale_order_ids
+            for sale_order_line in self.env['sale.order.line'].search([('order_id', '=', sale_order.id)])
+            if int(sale_order_line.price_reduce_taxinc*1000) < 0
+        ]
         if not products:
             total_amount = int(processing_values['amount']*1000)
 
@@ -58,6 +67,15 @@ class PaymentTransaction(models.Model):
                     'unit_amount': total_amount
                 }
             ]
+        all_products = []
+        if len(discounts)>0:
+            discount_amount = sum([discount['unit_amount'] for discount in discounts])
+            products_count = sum([product['quantity'] for product in products])
+            dics_per_unit = int(discount_amount/products_count)
+            for product in products:
+                product['unit_amount'] = product['unit_amount'] + dics_per_unit
+                all_products.append(product)
+
 
         _logger.info('Products:\n'+str(products))
 
@@ -66,7 +84,7 @@ class PaymentTransaction(models.Model):
             json={
                 "client_reference_id": processing_values['reference'],
                 "mode": "payment",
-                "products": products,
+                "products": all_products,
                 "success_url": url_join(
                     base=base_url,
                     url=ThawaniPayController._success_endpoint+'/'+processing_values['reference'].lower()
