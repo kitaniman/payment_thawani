@@ -75,6 +75,8 @@ class PaymentTransaction(models.Model):
             for product in products:
                 product['unit_amount'] = product['unit_amount'] + dics_per_unit
                 all_products.append(product)
+        else:
+            all_products = products
 
 
         _logger.info('Products:\n'+str(products))
